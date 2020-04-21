@@ -1,29 +1,31 @@
 # Git repo metadata
 TAG = $(shell git describe --tags --always)
-# TODO: if your docher hub account name is different then this on github ovrwrite this this variable with docer hub accout name
-PREFIX = $(shell git config --get remote.origin.url | tr ':.' '/'  | rev | cut -d '/' -f 3 | rev)
-# TODO: if your repository name is different then this github repository name on ovrwrite this variable with docer hub repo name
-REPO_NAME = $(shell git config --get remote.origin.url | tr ':.' '/'  | rev | cut -d '/' -f 2 | rev)
+GIT_USER_NAME = krwozny
+GIT_REPO_NAME = io-lab-docker-ci-public
+
+# Docker repo metadata
+DOCKER_USER_NAME = $(GIT_USER_NAME)
+DOCKER_REPO_NAME = $(GIT_REPO_NAME)
 
 # Image metadata
 
 # Name of the repository
-SCHEMA_NAME = $(PREFIX)/$(REPO_NAME)
+SCHEMA_NAME = $(DOCKER_USER_NAME)/$(DOCKER_REPO_NAME)
 SCHEMA_DESCRIPTION = My image!
 SCHEMA_URL = http://example.com
 
 # Vendor set to github user name
-SCEHMA_VENDOR = $(PREFIX)
+SCEHMA_VENDOR = $(GIT_USER_NAME)
 
-SCHEMA_VSC_URL = https://github.com/$(PREFIX)/$(REPO_NAME)
+SCHEMA_VSC_URL = https://github.com/$(GIT_USER_NAME)/$(GIT_REPO_NAME)
 
 # git commit shirt sha
-SCHEMA_VCS_REF = $(shell git rev-parse --short HEAD)
+SCHEMA_VCS_REF = $(git log --pretty=format:'%h' -n 1)
 
 SCHEMA_BUILD_DATE = $(shell date -u +'%Y-%m-%dT%H:%M:%SZ')
+SCHEMA_BUILD_VERSION = v1.0
 
-SCHEMA_BUILD_VERSION = your app version - framework specyfic
-SCHEMA_CMD = the command your run this container with
+SCHEMA_CMD = docker run -td $(SCHEMA_NAME)
 
 all: push
 
@@ -39,11 +41,16 @@ image:
 		--build-arg SCHEMA_BUILD_DATE="$(SCHEMA_BUILD_DATE)" \
 		--build-arg SCHEMA_BUILD_VERSION="$(SCHEMA_BUILD_VERSION)" \
 		--build-arg SCHEMA_CMD="$(SCHEMA_CMD)" \
+		--network host \
+		-t $(SCHEMA_NAME) .
 	
   # TODO: last part of this command that tags just built image with a specyfic tag
+	docker tag $(SCHEMA_NAME):latest $(SCHEMA_NAME):firstv
 	
 push: image
 	# TODO: two commands, first pushes the latest image, second pushes the image tagged with specyfic tag
+	docker push $(SCHEMA_NAME)
+	docker push $(SCHEMA_NAME):firstv
 	
 clean:
 
